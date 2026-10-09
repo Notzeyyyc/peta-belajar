@@ -1,0 +1,55 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* CSS vars shadcn/ui — nilai visual berasal dari token di src/lib/design-tokens.ts (DESIGN.md) */
+:root {
+  --background: 0 0% 100%;
+  --foreground: 0 0% 9%;
+  --border: 130 13% 84%; /* ~= line #D2DCD3 */
+}
+
+body {
+  @apply bg-canvas text-ink antialiased;
+}
+
+/* Flat total: tanpa gradient, shadow, blur di seluruh aplikasi. */
+* {
+  box-shadow: none !important;
+  text-shadow: none !important;
+  background-image: none !important;
+  backdrop-filter: none !important;
+  filter: none !important;
+}
+
+/* Fokus terlihat jelas untuk navigasi keyboard. */
+:focus-visible {
+  outline: 2px solid #1b1b1b;
+  outline-offset: 2px;
+}
+
+/* Animasi bar progres: 0 -> nilai, ease-out 600ms, stagger via --stagger-delay (60ms). */
+@keyframes bar-grow {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+.animate-bar {
+  transform-origin: left;
+  animation: bar-grow 600ms ease-out both;
+  animation-delay: var(--stagger-delay, 0ms);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-bar {
+    animation: none;
+  }
+  * {
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

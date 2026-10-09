@@ -1,0 +1,19 @@
+{
+  "name": "peta-belajar",
+  "private": true,
+  "version": "0.2.0",
+  "scripts": {
+    "dev:web": "pnpm --filter @peta-belajar/web dev",
+    "dev:api": "pnpm --filter @peta-belajar/api dev",
+    "build": "pnpm -r build",
+    "typecheck": "pnpm -r typecheck",
+    "lint": "pnpm -r lint",
+    "db:migrate": "pnpm --filter @peta-belajar/api db:migrate",
+    "db:seed": "pnpm --filter @peta-belajar/api db:seed",
+    "db:verify": "pnpm --filter @peta-belajar/api db:verify"
+  },
+  "engines": {
+    "node": ">=20",
+    "pnpm": ">=9"
+  }
+}
