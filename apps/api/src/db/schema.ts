@@ -1,4 +1,4 @@
-import { sqliteTable, text, integer, primaryKey } from "drizzle-orm/sqlite-core";
+import { sqliteTable, text, integer, primaryKey, uniqueIndex } from "drizzle-orm/sqlite-core";
 
 export const users = sqliteTable("users", {
   id: text("id").primaryKey(),
@@ -17,7 +17,7 @@ export const sessions = sqliteTable("sessions", {
 
 export const learningPreferences = sqliteTable("learning_preferences", {
   userId: text("user_id").primaryKey().references(() => users.id),
-  style: text("style", { enum: ["visual", "audio", "reading", "practice"] }).notNull().default("visual"),
+  style: text("style", { enum: ["visual", "praktik", "teori"] }).notNull().default("visual"),
   updatedAt: integer("updated_at", { mode: "timestamp_ms" }).notNull(),
 });
 
@@ -50,6 +50,8 @@ export const resources = sqliteTable("resources", {
   durationMinutes: integer("duration_minutes").notNull(),
   url: text("url").notNull(),
   level: text("level", { enum: ["beginner", "intermediate"] }).notNull().default("beginner"),
+  /** Teks/transkrip sumber terkurasi — bahan mentah Materi Anak (A+C). NULL = belum ada isi. */
+  content: text("content"),
   active: integer("active", { mode: "boolean" }).notNull().default(true),
   createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
 });
@@ -61,6 +63,24 @@ export const competencyResources = sqliteTable(
     resourceId: text("resource_id").notNull().references(() => resources.id),
   },
   (t) => ({ pk: primaryKey({ columns: [t.competencyId, t.resourceId] }) }),
+);
+
+/** Cache Materi Anak per (resource + gaya belajar) — panggilan kedua instan, demo < 60 detik. */
+export const materiCache = sqliteTable(
+  "materi_cache",
+  {
+    id: text("id").primaryKey(),
+    resourceId: text("resource_id")
+      .notNull()
+      .references(() => resources.id),
+    learningStyle: text("learning_style", { enum: ["visual", "praktik", "teori"] }).notNull(),
+    /** JSON string dari MateriAnakSchema (sudah tervalidasi Zod sebelum disimpan). */
+    payloadJson: text("payload_json").notNull(),
+    createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
+  },
+  (t) => ({
+    byResourceStyle: uniqueIndex("materi_cache_resource_style_uk").on(t.resourceId, t.learningStyle),
+  }),
 );
 
 export const progress = sqliteTable("progress", {

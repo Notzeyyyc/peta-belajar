@@ -1,18 +1,94 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
-import { User, ArrowRight } from "lucide-react";
+import { User, ArrowRight, Check } from "lucide-react";
+import { LEARNING_STYLE_LABEL, type LearningStyle } from "@peta-belajar/shared";
 import { AppShell, AppNav } from "@/components/app-shell";
 import { useApiData, SkeletonBlock, ErrorState, EmptyState } from "@/components/async";
 import { ProgressBar } from "@/components/status";
-import { api } from "@/lib/api";
+import { api, ApiError } from "@/lib/api";
+import { cn } from "@/lib/utils";
 
-const STYLE_LABEL: Record<string, string> = {
-  visual: "Visual — kamu suka belajar lewat gambar dan video",
-  audio: "Audio — kamu suka belajar sambil mendengar",
-  reading: "Membaca — kamu suka belajar lewat teks langkah demi langkah",
-  practice: "Praktik — kamu suka langsung mencoba membuat sesuatu",
+const STYLES: LearningStyle[] = ["visual", "praktik", "teori"];
+
+const STYLE_DESC: Record<LearningStyle, string> = {
+  visual: "Kamu suka belajar lewat gambar, warna, dan video.",
+  praktik: "Kamu suka langsung mencoba bikin sesuatu.",
+  teori: "Kamu suka membaca langkah demi langkah.",
 };
+
+function LearningStylePicker({ initial }: { initial: LearningStyle | null }) {
+  const [style, setStyle] = useState<LearningStyle | null>(initial);
+  const [saving, setSaving] = useState<LearningStyle | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  async function choose(next: LearningStyle) {
+    if (next === style || saving) return;
+    const prev = style;
+    setStyle(next); // optimis
+    setSaving(next);
+    setError(null);
+    try {
+      await api.setLearningStyle(next);
+    } catch (err) {
+      setStyle(prev); // rollback
+      setError(err instanceof ApiError ? err.message : "Gagal menyimpan. Coba lagi ya.");
+    } finally {
+      setSaving(null);
+    }
+  }
+
+  return (
+    <section aria-label="Gaya belajar" className="mt-10">
+      <h2 className="text-lg font-extrabold text-ink">Cara belajarmu</h2>
+      <p className="mt-1 text-sm text-ink-2">Pilih satu — AI akan menyesuaikan materimu.</p>
+      <div className="mt-4 grid gap-3 sm:grid-cols-3" role="radiogroup" aria-label="Gaya belajar">
+        {STYLES.map((s) => {
+          const selected = style === s;
+          return (
+            <button
+              key={s}
+              type="button"
+              role="radio"
+              aria-checked={selected}
+              disabled={saving !== null}
+              onClick={() => choose(s)}
+              className={cn(
+                "flex min-h-[44px] flex-col items-start gap-1 rounded-card border p-4 text-left transition-colors",
+                selected
+                  ? "border-dark bg-dark text-inverse"
+                  : "border-line bg-card text-ink hover:bg-line",
+                saving && saving !== s && "opacity-60",
+              )}
+            >
+              <span className="inline-flex items-center gap-2 text-[15px] font-bold">
+                {selected && <Check className="h-4 w-4" aria-hidden />}
+                {LEARNING_STYLE_LABEL[s]}
+                {saving === s && (
+                  <span className="text-xs font-semibold opacity-80">menyimpan…</span>
+                )}
+              </span>
+              <span className={cn("text-xs leading-[1.5]", selected ? "text-inverse/80" : "text-ink-2")}>
+                {STYLE_DESC[s]}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+      {error && (
+        <p role="alert" className="mt-3 rounded-control bg-card p-3 text-sm font-semibold text-ink">
+          {error}
+        </p>
+      )}
+      {!style && !error && (
+        <p className="mt-3 text-xs font-semibold text-ink-2">
+          Gaya belajar belum dipilih — materi pakai gaya Visual dulu, ya.
+        </p>
+      )}
+    </section>
+  );
+}
 
 export default function ProfilePage() {
   const { state, retry } = useApiData(() => api.profile());
@@ -39,7 +115,9 @@ export default function ProfilePage() {
                   {state.data.user.displayName}
                 </h1>
                 <p className="text-sm text-ink-2">
-                  {STYLE_LABEL[state.data.learningStyle ?? ""] ?? "Gaya belajar belum diatur"}
+                  {state.data.learningStyle
+                    ? `${LEARNING_STYLE_LABEL[state.data.learningStyle]} — ${STYLE_DESC[state.data.learningStyle]}`
+                    : "Gaya belajar belum diatur"}
                 </p>
               </div>
             </div>
@@ -67,6 +145,9 @@ export default function ProfilePage() {
                 </div>
               ))}
             </section>
+
+            {/* Pemilih gaya belajar — enum visual|praktik|teori (PUT /api/me/preferences) */}
+            <LearningStylePicker initial={state.data.learningStyle} />
 
             {/* Roadmap tersimpan */}
             <section aria-label="Roadmap tersimpan" className="mt-10">

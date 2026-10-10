@@ -6,7 +6,11 @@ settings:
 
 importers:
 
-  .: {}
+  .:
+    devDependencies:
+      '@esbuild/linux-x64':
+        specifier: 0.28.2
+        version: 0.28.2
 
   apps/api:
     dependencies:
@@ -3472,8 +3476,7 @@ snapshots:
   '@esbuild/linux-x64@0.19.12':
     optional: true
 
-  '@esbuild/linux-x64@0.28.2':
-    optional: true
+  '@esbuild/linux-x64@0.28.2': {}
 
   '@esbuild/netbsd-arm64@0.28.2':
     optional: true

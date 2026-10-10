@@ -53,3 +53,57 @@ export const GenerateRequestSchema = z.object({
     .default([]),
 });
 export type GenerateRequest = z.infer<typeof GenerateRequestSchema>;
+
+/* ------------------------- Materi Anak (fitur A) ------------------------- */
+
+/** Gaya belajar yang didukung untuk cache materi. */
+export const LearningStyleSchema = z.enum(["visual", "praktik", "teori"]);
+export type LearningStyle = z.infer<typeof LearningStyleSchema>;
+
+export const LEARNING_STYLE_LABEL: Record<LearningStyle, string> = {
+  visual: "Visual",
+  praktik: "Praktik",
+  teori: "Teori",
+};
+
+/**
+ * Struktur tetap Materi Anak — output model yang disederhanakan dari teks katalog.
+ * Aturan keras: tanpa URL (dilarang "http"), tantangan = pemantik pikir, bukan jawaban.
+ */
+const noUrl = (value: string) => !/https?:\/\//i.test(value) && !/\b[\w-]+\.(com|id|org|net|io)\b/i.test(value);
+const childText = (max: number) =>
+  z
+    .string()
+    .trim()
+    .min(10, "Terlalu pendek untuk anak")
+    .max(max)
+    .refine(noUrl, "Materi tidak boleh memuat URL");
+
+export const MateriAnakSchema = z.object({
+  pengantar: childText(600),
+  analogi: childText(600),
+  inti: z.array(childText(300)).min(3).max(8),
+  tantangan: z.array(childText(300)).min(2).max(5),
+});
+export type MateriAnak = z.infer<typeof MateriAnakSchema>;
+
+/** Respons endpoint materi: mode ai (hasil model/cache) atau fallback (katalog polos). */
+export interface MateriSumber {
+  id: string;
+  title: string;
+  url: string;
+  type: string;
+  durationMinutes: number;
+}
+
+export interface MateriResponse {
+  mode: "ai" | "fallback";
+  cached?: boolean;
+  materi?: MateriAnak;
+  reason?: string;
+  /** Mode "ai": sumber dari katalog (id/title/url dijamin katalog, bukan buatan model). */
+  sumber?: MateriSumber;
+  /** Mode "fallback": resource katalog polos yang ditampilkan ke anak. */
+  resource?: MateriSumber;
+  learningStyle: LearningStyle;
+}

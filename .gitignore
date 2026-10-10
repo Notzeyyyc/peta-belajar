@@ -7,3 +7,5 @@ dist/
 apps/api/data/*.db
 apps/api/data/*.db-*
 .DS_Store
+tsconfig.tsbuildinfo
+*.tsbuildinfo

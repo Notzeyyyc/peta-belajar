@@ -1,3 +1,5 @@
+import type { LearningStyle, MateriResponse } from "@peta-belajar/shared";
+
 // Selalu pakai path relatif: Next.js me-proxy /api/* ke backend (lihat next.config.mjs).
 // Ini membuat cookie sesi same-origin dan tidak bergantung pada hostname klien.
 export const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "";
@@ -104,10 +106,18 @@ export const api = {
   profile: () =>
     request<{
       user: ApiUser;
-      learningStyle: "visual" | "audio" | "reading" | "practice" | null;
+      learningStyle: LearningStyle | null;
       roadmaps: RoadmapSummary[];
       stats: { cumulativeGap: number; completed: number; total: number };
     }>("/api/profile"),
+  setLearningStyle: (learningStyle: LearningStyle) =>
+    request<{ ok: boolean; learningStyle: LearningStyle }>("/api/me/preferences", {
+      method: "PUT",
+      body: JSON.stringify({ learningStyle }),
+    }),
+  /** Materi Anak — mode "ai" (materi+cached+sumber) atau "fallback" (reason+resource). */
+  materi: (roadmapId: string, stepId: string) =>
+    request<MateriResponse>(`/api/roadmaps/${roadmapId}/steps/${stepId}/materi`),
   roadmap: (id: string) => request<RoadmapDetail>(`/api/roadmaps/${id}`),
   clarify: (goal: string) =>
     request<{ questions: { id: string; question: string; options: string[] }[] }>(

@@ -4,7 +4,14 @@ import cookieParser from "cookie-parser";
 import rateLimit, { ipKeyGenerator } from "express-rate-limit";
 import { pinoHttp } from "pino-http";
 import { asc, eq, inArray, and } from "drizzle-orm";
-import { ClarifyRequestSchema, GenerateRequestSchema } from "@peta-belajar/shared";
+import {
+  ClarifyRequestSchema,
+  GenerateRequestSchema,
+  LearningStyleSchema,
+  MateriAnakSchema,
+  type LearningStyle,
+  type MateriSumber,
+} from "@peta-belajar/shared";
 import { db, schema } from "./db/client.js";
 import { logger } from "./lib/logger.js";
 import { AppError, ERR, sendError } from "./lib/errors.js";
@@ -15,9 +22,27 @@ import {
   setSessionCookie,
   type AuthedRequest,
 } from "./auth/session.js";
-import { aiModel, clarifyGoal, generateRoadmap, hashInput } from "./ai/client.js";
+import { aiModel, clarifyGoal, generateMateriAnak, generateRoadmap, hashInput } from "./ai/client.js";
 
 const DEMO_USER_ID = "user_demo_juri";
+
+/** Baca gaya belajar user (default visual bila belum pernah diset). */
+function currentLearningStyle(userId: string): LearningStyle {
+  const prefs = db
+    .select()
+    .from(schema.learningPreferences)
+    .where(eq(schema.learningPreferences.userId, userId))
+    .get();
+  return LearningStyleSchema.safeParse(prefs?.style).data ?? "visual";
+}
+
+function safeJson(raw: string): unknown {
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
+}
 
 export function createApp() {
   const app = express();
@@ -55,6 +80,22 @@ export function createApp() {
 
   app.get("/api/me", requireAuth, (req: AuthedRequest, res) => {
     res.json({ user: req.user });
+  });
+
+  /* --------------------------- Preferences -------------------------------- */
+  app.put("/api/me/preferences", requireAuth, (req: AuthedRequest, res) => {
+    const parsed = LearningStyleSchema.safeParse(req.body?.learningStyle);
+    if (!parsed.success) {
+      sendError(res, 400, ERR.INVALID_REQUEST, "Gaya belajar harus visual, praktik, atau teori.");
+      return;
+    }
+    const userId = req.user!.id;
+    const now = new Date();
+    db.insert(schema.learningPreferences)
+      .values({ userId, style: parsed.data, updatedAt: now })
+      .onConflictDoUpdate({ target: schema.learningPreferences.userId, set: { style: parsed.data, updatedAt: now } })
+      .run();
+    res.json({ ok: true, learningStyle: parsed.data });
   });
 
   /* ------------------------------ Resources ----------------------------- */
@@ -189,6 +230,115 @@ export function createApp() {
       handleRouteError(err, res);
     }
   });
+
+  /* ---------------------------- Materi Anak (A) --------------------------- */
+  function plainSumber(r: typeof schema.resources.$inferSelect): MateriSumber {
+    return { id: r.id, title: r.title, url: r.url, type: r.type, durationMinutes: r.durationMinutes };
+  }
+
+  app.get(
+    "/api/roadmaps/:id/steps/:stepId/materi",
+    requireAuth,
+    aiLimiter,
+    async (req: AuthedRequest, res) => {
+      const userId = req.user!.id;
+      const roadmap = db
+        .select()
+        .from(schema.roadmaps)
+        .where(and(eq(schema.roadmaps.id, req.params.id), eq(schema.roadmaps.userId, userId)))
+        .get();
+      if (!roadmap) {
+        sendError(res, 404, ERR.NOT_FOUND, "Roadmap tidak ditemukan.");
+        return;
+      }
+      const step = db
+        .select()
+        .from(schema.competencies)
+        .where(and(eq(schema.competencies.id, req.params.stepId), eq(schema.competencies.roadmapId, roadmap.id)))
+        .get();
+      if (!step) {
+        sendError(res, 404, ERR.NOT_FOUND, "Langkah tidak ditemukan pada roadmap ini.");
+        return;
+      }
+
+      // Resource langkah (deterministik: urut id), pilih yang pertama PUNYA content kurasi.
+      const linked = db
+        .select({ resource: schema.resources })
+        .from(schema.competencyResources)
+        .innerJoin(schema.resources, eq(schema.competencyResources.resourceId, schema.resources.id))
+        .where(eq(schema.competencyResources.competencyId, step.id))
+        .orderBy(asc(schema.resources.id))
+        .all()
+        .map((l) => l.resource);
+      if (linked.length === 0) {
+        sendError(res, 404, ERR.NOT_FOUND, "Langkah ini belum punya materi sumber.");
+        return;
+      }
+      const source = linked.find((r) => r.content && r.content.trim().length > 0);
+      if (!source) {
+        // Fallback ramah: katalog polos, tanpa AI, tanpa cache.
+        res.json({
+          mode: "fallback",
+          reason: "Sumber materi belum punya teks kurasi.",
+          resource: plainSumber(linked[0]!),
+          learningStyle: currentLearningStyle(userId),
+        });
+        return;
+      }
+
+      const style = currentLearningStyle(userId);
+
+      // 1) Cache hit → instan, tanpa panggilan model.
+      const cached = db
+        .select()
+        .from(schema.materiCache)
+        .where(and(eq(schema.materiCache.resourceId, source.id), eq(schema.materiCache.learningStyle, style)))
+        .get();
+      if (cached) {
+        const validated = MateriAnakSchema.safeParse(safeJson(cached.payloadJson));
+        if (validated.success) {
+          res.json({
+            mode: "ai",
+            cached: true,
+            materi: validated.data,
+            sumber: plainSumber(source),
+            learningStyle: style,
+          });
+          return;
+        }
+        // Baris cache korup → buang, regenerasi.
+        db.delete(schema.materiCache).where(eq(schema.materiCache.id, cached.id)).run();
+      }
+
+      // 2) Cache miss → AI (prompt terkunci), validasi Zod, simpan cache.
+      try {
+        const materi = await generateMateriAnak(source.content!, style, source.title);
+        db.insert(schema.materiCache)
+          .values({
+            id: crypto.randomUUID(),
+            resourceId: source.id,
+            learningStyle: style,
+            payloadJson: JSON.stringify(materi),
+            createdAt: new Date(),
+          })
+          .onConflictDoNothing()
+          .run();
+        res.json({ mode: "ai", cached: false, materi, sumber: plainSumber(source), learningStyle: style });
+      } catch (err) {
+        // Fallback ramah untuk error/invalid/timeout provider — TANPA cache hasil gagal.
+        logger.warn(
+          { err: err instanceof Error ? err.message : String(err), resourceId: source.id },
+          "materi: fallback karena AI gagal",
+        );
+        res.json({
+          mode: "fallback",
+          reason: "Layanan AI sedang tidak tersedia. Ini sumber aslinya ya.",
+          resource: plainSumber(source),
+          learningStyle: style,
+        });
+      }
+    },
+  );
 
   /* ---------------------------- Home & Profile --------------------------- */
   function summarizeRoadmap(roadmapId: string, userId: string) {

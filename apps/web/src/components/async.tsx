@@ -1,17 +1,19 @@
 "use client";
 
 import { useCallback, useEffect, useState, type ReactNode } from "react";
+import { useRouter } from "next/navigation";
 import { RotateCcw } from "lucide-react";
 import { ApiError } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 
 export type AsyncState<T> =
   | { kind: "loading" }
-  | { kind: "error"; message: string; offline: boolean }
+  | { kind: "error"; message: string; offline: boolean; unauthorized: boolean; code: string }
   | { kind: "ready"; data: T };
 
-/** Hook data-fetch dengan state loading/error(offline)/ready + retry. */
+/** Hook data-fetch dengan state loading/error(offline/401)/ready + retry. */
 export function useApiData<T>(fetcher: () => Promise<T>, deps: unknown[] = []) {
+  const router = useRouter();
   const [state, setState] = useState<AsyncState<T>>({ kind: "loading" });
   const [tick, setTick] = useState(0);
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -25,26 +27,31 @@ export function useApiData<T>(fetcher: () => Promise<T>, deps: unknown[] = []) {
       .catch((err: unknown) => {
         if (!alive) return;
         const apiErr = err instanceof ApiError ? err : null;
+        const unauthorized = apiErr?.status === 401;
         setState({
           kind: "error",
           message: apiErr?.message ?? "Terjadi kesalahan. Coba lagi ya.",
           offline: apiErr?.code === "OFFLINE",
+          unauthorized,
+          code: apiErr?.code ?? "UNKNOWN",
         });
+        // Sesi hilang/kedaluwarsa → arahkan login (tanpa flash error).
+        if (unauthorized) router.replace("/login");
       });
     return () => {
       alive = false;
     };
-  }, [memoFetcher, tick]);
+  }, [memoFetcher, tick, router]);
 
   return { state, retry: () => setTick((t) => t + 1) };
 }
 
-/** Skeleton monokrom (abu netral, tanpa warna status). */
+/** Skeleton monokrom (abu netral, tanpa warna status; diam saat reduced motion). */
 export function Skeleton({ className = "" }: { className?: string }) {
   return (
     <div
       aria-hidden
-      className={`animate-pulse rounded-tile bg-ink/10 ${className}`}
+      className={`motion-safe:animate-pulse rounded-tile bg-ink/10 ${className}`}
     />
   );
 }
