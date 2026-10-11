@@ -7,13 +7,45 @@
   --background: 0 0% 100%;
   --foreground: 0 0% 9%;
   --border: 130 13% 84%; /* ~= line #D2DCD3 */
+  --c-master: #3E7C4F; /* status-master (design-tokens.ts) */
+  --c-line: #D2DCD3; /* line (design-tokens.ts) */
+}
+
+html {
+  overflow-x: hidden;
 }
 
 body {
   @apply bg-canvas text-ink antialiased;
+  overflow-x: hidden;
 }
 
-/* Flat total: tanpa gradient, shadow, blur di seluruh aplikasi. */
+/* Bottom nav fixed di semua halaman; setiap <main> page telah diberi
+   pb-36 (144px) mobile / pb-8 desktop agar konten terakhir bisa di-scroll
+   di atas nav. */
+
+/* Paksa bottom nav tetap di atas viewport; hindari broken fixed position. */
+nav[aria-label="Navigasi utama"] {
+  transform: translateZ(0);
+}
+
+/* Main content diberi extra padding-bottom untuk clear bottom nav mobile */
+main {
+  padding-bottom: calc(64px + env(safe-area-inset-bottom, 0px) + 32px);
+}
+
+@media (min-width: 768px) {
+  main {
+    padding-bottom: 2rem;
+  }
+}
+
+/* Flat total: tanpa gradient, shadow, blur di seluruh aplikasi.
+   Catatan: `background-image: none` diterapkan pada semua elemen untuk
+   memaksa flat design. Ini sengaja mematikan background gradients,
+   tetapi juga akan menimpa gradient pada elemen non-esensial seperti
+   progress bars jika menggunakan CSS gradients. Proyek ini menggunakan
+   warna solid (bg-* Tailwind) untuk fill, sehingga aman. */
 * {
   box-shadow: none !important;
   text-shadow: none !important;
@@ -44,9 +76,131 @@ body {
   animation-delay: var(--stagger-delay, 0ms);
 }
 
+/* --- Redesign roadmap: M1 stagger reveal node (fade + slide-up 12px) --- */
+@keyframes node-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.animate-node {
+  animation: node-in 300ms ease-out both;
+  animation-delay: var(--node-delay, 0ms);
+}
+
+/* --- M2: ikon check muncul scale 0.8 -> 1 (one-shot) --- */
+@keyframes check-pop {
+  from {
+    transform: scale(0.8);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+.animate-check {
+  animation: check-pop 300ms ease-out both;
+}
+
+/* --- M3: connector draw-in (stroke-dashoffset 0 -> 1), mulai +200ms setelah M1 --- */
+@keyframes draw-in {
+  from {
+    stroke-dashoffset: 32;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+.animate-draw {
+  animation: draw-in 500ms ease-out both;
+  animation-delay: calc(var(--node-delay, 0ms) + 200ms);
+}
+
+/* ===== M4/M5: motion global — transform/opacity saja, tanpa shadow/warna baru ===== */
+
+/* Card hover: angkat 2px, 150ms, TANPA shadow. Terapkan lewat utilitas .card-hover. */
+.card-hover {
+  transition: transform 150ms ease-out;
+}
+.card-hover:hover {
+  transform: translateY(-2px);
+}
+
+/* Button tekan: umpan balik fisik ringan. */
+button:active,
+a[class*="btn"]:active,
+[role="button"]:active {
+  transform: scale(0.98);
+}
+
+/* Cross-fade skeleton -> konten: 200ms opacity saat konten siap. */
+@keyframes content-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.content-fade {
+  animation: content-fade 200ms ease-out both;
+}
+
+/* Shimmer monokrom pelan SATU ARAH untuk skeleton (blok bg-ink/5 meluncur kiri->kanan;
+   background-color dipakai agar tidak melanggar larangan background-image di atas). */
+@keyframes shimmer-slide {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(250%);
+  }
+}
+.skeleton-shimmer {
+  position: relative;
+  overflow: hidden;
+}
+.skeleton-shimmer::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  width: 40%;
+  background-color: rgba(27, 27, 27, 0.05);
+  animation: shimmer-slide 1800ms ease-in-out infinite;
+}
+
+/* M5: cross-fade skeleton -> konten (200ms ease-out). */
+@keyframes fadein {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .animate-bar {
+  .animate-node,
+  .animate-check,
+  .animate-draw {
     animation: none;
+  }
+  .animate-bar,
+  .content-fade {
+    animation: none;
+  }
+  .skeleton-shimmer::after {
+    animation: none;
+    display: none;
+  }
+  .card-hover:hover,
+  button:active,
+  a[class*="btn"]:active,
+  [role="button"]:active {
+    transform: none;
   }
   * {
     transition-duration: 0.01ms !important;

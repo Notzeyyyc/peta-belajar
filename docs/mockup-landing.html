@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Peta Belajar — Mockup Landing</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<style>
+  :root{
+    --canvas:#161616; --window:#E3EDE5; --card:#F4F6F3;
+    --dark:#1B1B1B; --dark-elev:#252B26; --ink:#171717; --ink-2:#657066;
+    --line:#D2DCD3; --inverse:#FFFFFF;
+    --gap:#B3452F; --half:#C8A02E; --master:#3E7C4F;
+    --r-frame:40px; --r-card:24px; --r-tile:18px; --r-control:14px; --r-pill:999px;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;font-family:'Manrope',sans-serif}
+  body{background:var(--canvas);padding:24px}
+  .frame{background:var(--window);border-radius:var(--r-frame);max-width:1180px;margin:0 auto;padding:28px 42px 42px;overflow:hidden}
+
+  /* Header */
+  header{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+  .logo{display:flex;align-items:center;gap:10px;font-weight:800;font-size:18px;color:var(--ink)}
+  .logo-mark{width:32px;height:32px;background:var(--dark);border-radius:10px;display:grid;place-items:center;color:var(--window)}
+  nav{display:flex;gap:26px}
+  nav a{color:var(--ink);text-decoration:none;font-size:14px;font-weight:600}
+  nav a:hover{color:var(--ink-2)}
+  .btn{display:inline-flex;align-items:center;gap:8px;border:none;cursor:pointer;text-decoration:none;
+       border-radius:var(--r-pill);padding:14px 24px;font-size:15px;font-weight:700;line-height:1.35;min-height:44px}
+  .btn-primary{background:var(--dark);color:var(--inverse)}
+  .btn-primary:hover{background:var(--dark-elev)}
+  .btn-secondary{background:var(--card);color:var(--ink)}
+
+  /* Hero */
+  .hero{display:grid;grid-template-columns:1.1fr 1fr;gap:42px;align-items:center;padding:64px 0 48px}
+  .hero h1{font-size:60px;font-weight:400;line-height:1.04;letter-spacing:-2px;color:var(--ink)}
+  .hero h1 strong{font-weight:800}
+  .hero p{margin:20px 0 28px;font-size:14px;line-height:1.6;color:var(--ink-2);max-width:420px}
+
+  /* Roadmap preview (hero illustration) */
+  .roadmap-card{background:var(--card);border-radius:var(--r-card);padding:24px;border:1px solid var(--line)}
+  .roadmap-card h3{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2);margin-bottom:18px;display:flex;align-items:center;gap:6px}
+  .track{position:relative;padding-left:6px}
+  .track::before{content:"";position:absolute;left:19px;top:14px;bottom:14px;width:2px;background:var(--line)}
+  .node{display:flex;align-items:center;gap:14px;padding:10px 0;position:relative}
+  .dot{width:27px;height:27px;min-width:27px;border-radius:var(--r-pill);display:grid;place-items:center;color:#fff;position:relative;z-index:1}
+  .dot svg{width:14px;height:14px}
+  .dot.gap{background:var(--gap)} .dot.half{background:var(--half);color:var(--ink)} .dot.master{background:var(--master)}
+  .node .label{font-size:14px;font-weight:700;color:var(--ink)}
+  .node .status{margin-left:auto;font-size:11px;font-weight:600;padding:6px 12px;border-radius:var(--r-pill);background:var(--window);color:var(--ink-2)}
+  .node.next .status{background:var(--dark);color:var(--inverse)}
+
+  /* Trust strip */
+  .strip{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;padding:8px 0 48px}
+  .chip{display:inline-flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--line);
+        color:var(--ink);border-radius:var(--r-pill);padding:11px 18px;font-size:11px;font-weight:600}
+  .chip svg{width:14px;height:14px;color:var(--ink-2)}
+
+  /* Section headings */
+  .sec-label{display:inline-block;background:var(--dark);color:var(--inverse);border-radius:var(--r-pill);padding:8px 16px;font-size:11px;font-weight:600;letter-spacing:.04em;margin-bottom:14px}
+  h2{font-size:28px;font-weight:400;letter-spacing:-1px;color:var(--ink);line-height:1.2}
+  .sec-head{margin-bottom:28px}
+
+  /* Feature cards */
+  .cards{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;padding-bottom:48px}
+  .fcard{background:var(--card);border-radius:var(--r-card);padding:22px;border:1px solid var(--line);display:flex;flex-direction:column;gap:12px}
+  .fcard .num{width:38px;height:38px;border-radius:var(--r-pill);background:var(--dark);color:var(--inverse);display:grid;place-items:center;font-weight:800;font-size:15px}
+  .fcard h4{font-size:15px;font-weight:700;color:var(--ink)}
+  .fcard p{font-size:14px;line-height:1.6;color:var(--ink-2)}
+  .fcard .icon{margin-top:auto;color:var(--ink-2)}
+
+  /* CTA banner */
+  .banner{background:var(--dark);border-radius:var(--r-card);padding:40px;display:flex;align-items:center;justify-content:space-between;gap:24px;flex-wrap:wrap}
+  .banner h2{color:var(--inverse)}
+  .banner p{color:#B9C4BA;font-size:14px;line-height:1.6;margin-top:10px;max-width:440px}
+  .banner .btn-primary{background:var(--inverse);color:var(--ink)}
+
+  footer{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;padding-top:32px;margin-top:32px;border-top:1px dashed var(--line);color:var(--ink-2);font-size:11px;font-weight:600}
+
+  @media (max-width:820px){
+    body{padding:12px}
+    .frame{padding:20px 20px 32px;border-radius:28px}
+    nav{display:none}
+    .hero{grid-template-columns:1fr;padding:36px 0 32px;gap:28px}
+    .hero h1{font-size:38px;letter-spacing:-1.2px}
+    .cards{grid-template-columns:1fr}
+    .banner{padding:28px}
+  }
+</style>
+</head>
+<body>
+<div class="frame">
+
+  <header>
+    <div class="logo">
+      <span class="logo-mark"><i data-lucide="map" style="width:16px;height:16px"></i></span>
+      Peta Belajar
+    </div>
+    <nav>
+      <a href="#fitur">Fitur</a>
+      <a href="#cara-kerja">Cara Kerja</a>
+      <a href="#tentang">Tentang</a>
+    </nav>
+    <a class="btn btn-primary" href="#">Mulai belajar sekarang <i data-lucide="arrow-right" style="width:16px;height:16px"></i></a>
+  </header>
+
+  <section class="hero">
+    <div>
+      <h1>Tujuan belajarmu, <strong>jadi peta yang jelas.</strong></h1>
+      <p>Tulis satu tujuan belajar, jawab 2–3 pertanyaan singkat, dan dapatkan peta kompetensi yang bisa kamu ikuti langkah demi langkah — tanpa jawaban instan.</p>
+      <a class="btn btn-primary" href="#">Mulai belajar sekarang <i data-lucide="arrow-right" style="width:16px;height:16px"></i></a>
+    </div>
+
+    <div class="roadmap-card">
+      <h3><i data-lucide="route" style="width:13px;height:13px"></i> Contoh peta: Pecahan Kelas 4</h3>
+      <div class="track">
+        <div class="node">
+          <span class="dot master"><i data-lucide="check"></i></span>
+          <span class="label">Arti pecahan sederhana</span>
+          <span class="status">Kuasai</span>
+        </div>
+        <div class="node">
+          <span class="dot half"><i data-lucide="minus"></i></span>
+          <span class="label">Membandingkan pecahan</span>
+          <span class="status">Setengah</span>
+        </div>
+        <div class="node next">
+          <span class="dot gap"><i data-lucide="flag"></i></span>
+          <span class="label">Menjumlahkan pecahan</span>
+          <span class="status">Langkah berikutnya</span>
+        </div>
+        <div class="node">
+          <span class="dot" style="background:var(--line);color:var(--ink-2)"><i data-lucide="lock"></i></span>
+          <span class="label">Pecahan campuran</span>
+          <span class="status">Terkunci</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="strip">
+    <span class="chip"><i data-lucide="shield-check"></i> Bukan mesin jawaban</span>
+    <span class="chip"><i data-lucide="pencil"></i> Peta bisa kamu edit</span>
+    <span class="chip"><i data-lucide="footprints"></i> Satu langkah jelas tiap layar</span>
+  </section>
+
+  <section id="cara-kerja">
+    <div class="sec-head">
+      <span class="sec-label">Cara Kerja</span>
+      <h2>Tiga langkah menuju peta belajarmu</h2>
+    </div>
+    <div class="cards">
+      <div class="fcard">
+        <span class="num">1</span>
+        <h4>Tulis tujuanmu</h4>
+        <p>“Aku mau bisa pecahan” sudah cukup. AI akan bertanya 2–3 hal singkat supaya petanya pas buat kamu.</p>
+        <span class="icon"><i data-lucide="message-circle-question"></i></span>
+      </div>
+      <div class="fcard">
+        <span class="num">2</span>
+        <h4>Dapatkan peta kompetensi</h4>
+        <p>Lihat mana yang sudah kamu kuasai, setengah paham, dan mana celah yang perlu dilatih dulu.</p>
+        <span class="icon"><i data-lucide="map"></i></span>
+      </div>
+      <div class="fcard">
+        <span class="num">3</span>
+        <h4>Belajar terpandu</h4>
+        <p>Materi singkat dan latihan yang membantumu berpikir — bukan memberi jawaban PR secara instan.</p>
+        <span class="icon"><i data-lucide="book-open"></i></span>
+      </div>
+    </div>
+  </section>
+
+  <section class="banner">
+    <div>
+      <h2>Siap melihat petamu?</h2>
+      <p>Mulai dari satu tujuan kecil hari ini. Gratis dicoba, tanpa perlu daftar dulu.</p>
+    </div>
+    <a class="btn btn-primary" href="#">Mulai belajar sekarang <i data-lucide="arrow-right" style="width:16px;height:16px"></i></a>
+  </section>
+
+  <footer>
+    <span>© 2026 Peta Belajar</span>
+    <span>Dibuat untuk pelajar SD Indonesia</span>
+  </footer>
+
+</div>
+<script>lucide.createIcons();</script>
+</body>
+</html>

@@ -4,12 +4,15 @@ import { useState } from "react";
 import Link from "next/link";
 import {
   ArrowLeft,
+  ArrowRight,
   Check,
   Clock,
   BookOpen,
   ExternalLink,
   Lightbulb,
   HelpCircle,
+  MessageCircleQuestion,
+  Play,
   RotateCcw,
 } from "lucide-react";
 import type { MateriResponse, MateriSumber } from "@peta-belajar/shared";
@@ -27,6 +30,39 @@ const TYPE_LABEL: Record<string, string> = {
   game: "Game",
   course: "Kursus",
 };
+
+/** Badge meta ala mockup: "Materi x dari y" + durasi menit (ikon book-open/clock). */
+function MetaBadges({ index, total, sumber }: { index: number; total: number; sumber: MateriSumber | null | undefined }) {
+  return (
+    <div className="mt-3 flex flex-wrap gap-2">
+      <span className="inline-flex items-center gap-1.5 rounded-pill border border-line bg-card px-3 py-1.5 text-[11px] font-semibold text-ink-2">
+        <BookOpen className="h-3.5 w-3.5" aria-hidden />
+        Materi {index + 1} dari {total}
+      </span>
+      {sumber && (
+        <span className="inline-flex items-center gap-1.5 rounded-pill border border-line bg-card px-3 py-1.5 text-[11px] font-semibold text-ink-2">
+          <Clock className="h-3.5 w-3.5" aria-hidden />
+          {sumber.durationMinutes} menit
+        </span>
+      )}
+    </div>
+  );
+}
+
+/** Placeholder video (ikon play) bila sumber bertipe video — konten tetap di sumber asli. */
+function VideoPlaceholder({ sumber }: { sumber: MateriSumber }) {
+  return (
+    <a
+      href={sumber.url}
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label={`Putar video: ${sumber.title}`}
+      className="mt-6 flex aspect-video items-center justify-center rounded-tile border border-line bg-window text-ink-2 transition-colors hover:text-ink"
+    >
+      <Play className="h-11 w-11" aria-hidden />
+    </a>
+  );
+}
 
 /** Chip format + durasi — dipakai untuk sumber asli (mode ai & fallback). */
 function SumberChips({ sumber }: { sumber: MateriSumber }) {
@@ -224,7 +260,7 @@ export function MateriView({ id, compId }: { id: string; compId: string }) {
   return (
     <AppShell>
       <AppNav />
-      <main className="mx-auto max-w-3xl px-5 py-8 pb-28 md:px-[42px] md:py-12 md:pb-12">
+      <main className="mx-auto max-w-3xl px-5 pb-36 pt-8 md:px-[42px] md:pb-8 md:pt-12">
         {state.kind === "loading" && <SkeletonBlock lines={6} />}
         {state.kind === "error" && (
           <ErrorState message={state.message} offline={state.offline} onRetry={retry} />
@@ -240,9 +276,15 @@ export function MateriView({ id, compId }: { id: string; compId: string }) {
                 />
               );
             }
+            const comps = state.data.competencies;
+            const compIndex = comps.findIndex((c) => c.id === compId);
+            const prev = compIndex > 0 ? comps[compIndex - 1] : null;
             const isDone = completed ?? comp.completed;
+            const readyData = materiState.kind === "ready" ? materiState.data : null;
+            const sumber =
+              readyData?.mode === "ai" ? readyData.sumber : (readyData?.resource ?? null);
             return (
-              <>
+              <div className="content-fade">
                 <Link
                   href={`/roadmap/${id}`}
                   className="inline-flex min-h-[44px] items-center gap-2 text-sm font-semibold text-ink-2 hover:text-ink"
@@ -260,10 +302,13 @@ export function MateriView({ id, compId }: { id: string; compId: string }) {
                     </span>
                   )}
                 </div>
+                <MetaBadges index={compIndex} total={comps.length} sumber={sumber} />
                 <h1 className="mt-4 text-[32px] leading-[1.1] tracking-[-1px] text-ink">
                   {comp.name}
                 </h1>
                 <p className="mt-3 text-sm leading-[1.6] text-ink-2">{comp.description}</p>
+
+                {sumber?.type === "video" && <VideoPlaceholder sumber={sumber} />}
 
                 {/* Materi Anak */}
                 {materiState.kind === "loading" && <MateriSkeleton />}
@@ -283,7 +328,24 @@ export function MateriView({ id, compId }: { id: string; compId: string }) {
                     <MateriFallback data={materiState.data} onRetry={retryMateri} />
                   ))}
 
-                <div className="mt-10">
+                {/* Aksi bawah: materi sebelumnya / Tanya AI / tandai selesai & lanjut */}
+                <div className="mt-10 flex flex-wrap items-center gap-3">
+                  {prev && (
+                    <Link
+                      href={`/roadmap/${id}/materi/${prev.id}`}
+                      className="inline-flex min-h-[44px] items-center gap-2 rounded-pill bg-window px-4 py-2 text-sm font-bold text-ink hover:bg-line"
+                    >
+                      <ArrowLeft className="h-4 w-4" aria-hidden />
+                      Materi sebelumnya
+                    </Link>
+                  )}
+                  <Link
+                    href="/tanya"
+                    className="inline-flex min-h-[44px] items-center gap-2 rounded-pill bg-window px-4 py-2 text-sm font-bold text-ink hover:bg-line"
+                  >
+                    <MessageCircleQuestion className="h-4 w-4" aria-hidden />
+                    Tanya AI
+                  </Link>
                   <Button
                     onClick={() => toggleComplete(isDone)}
                     disabled={pending}
@@ -296,17 +358,18 @@ export function MateriView({ id, compId }: { id: string; compId: string }) {
                       : isDone
                         ? "Sudah selesai — batalkan?"
                         : "Tandai selesai"}
+                    {!isDone && !pending && <ArrowRight className="h-4 w-4" aria-hidden />}
                   </Button>
-                  {error && (
-                    <p
-                      role="alert"
-                      className="mt-3 rounded-control bg-card p-3 text-sm font-semibold text-ink"
-                    >
-                      {error}
-                    </p>
-                  )}
                 </div>
-              </>
+                {error && (
+                  <p
+                    role="alert"
+                    className="mt-3 rounded-control bg-card p-3 text-sm font-semibold text-ink"
+                  >
+                    {error}
+                  </p>
+                )}
+              </div>
             );
           })()}
       </main>

@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tanya AI — Peta Belajar</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="shared.css">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+</head>
+<body>
+<div class="app-frame">
+  <header class="topbar">
+    <div class="brand"><span class="logo"><i data-lucide="map"></i></span> Peta Belajar</div>
+    <nav class="topnav">
+      <a href="home.html">Beranda</a>
+      <a href="roadmap.html">Peta</a>
+      <a href="tanya.html" class="active">Tanya AI</a>
+      <a href="profile.html"><span class="avatar">RA</span></a>
+    </nav>
+  </header>
+
+  <main class="chat-wrap">
+    <div style="display:flex;gap:8px;flex-wrap:wrap;padding:4px 4px 10px">
+      <span class="chip"><i data-lucide="lightbulb"></i> Apa itu pecahan senilai?</span>
+      <span class="chip"><i data-lucide="puzzle"></i> Kenapa penyebut harus sama?</span>
+      <span class="chip"><i data-lucide="list-checks"></i> Kasih aku latihan singkat</span>
+    </div>
+    <div class="chat-log">
+      <div class="msg ai">Halo Raka! Aku teman belajarmu. Kamu sedang di materi <b>Membandingkan pecahan</b> — ada yang mau kamu tanyakan?</div>
+      <div class="msg user">Kenapa 1/2 itu sama dengan 2/4 ya? Aku masih bingung.</div>
+      <div class="msg ai">Pertanyaan bagus! Coba bayangkan satu pizza.<br><br>• Kalau dipotong jadi <b>2 bagian</b> dan kamu ambil <b>1</b>, itu 1/2.<br>• Kalau pizza yang sama dipotong jadi <b>4 bagian</b> dan kamu ambil <b>2</b>, itu 2/4.<br><br>Menurutmu, banyak pizza yang kamu dapat berubah atau tetap sama?</div>
+      <div class="msg user">Ohh tetap sama! Cuma potongannya yang lebih kecil.</div>
+      <div class="msg ai">Tepat sekali! Nah, sekarang coba kamu pikirkan: kalau pizza yang sama dipotong jadi 6, berapa potong yang setara dengan 1/2?</div>
+    </div>
+    <div class="chat-input">
+      <input type="text" placeholder="Tulis pertanyaanmu di sini…">
+      <button class="btn" type="button">Kirim <i data-lucide="send"></i></button>
+    </div>
+  </main>
+
+  <nav class="bottomnav">
+    <a href="home.html"><i data-lucide="home"></i>Beranda</a>
+    <a href="roadmap.html"><i data-lucide="map"></i>Peta</a>
+    <a href="tanya.html" class="active"><i data-lucide="message-circle-question"></i>Tanya</a>
+    <a href="profile.html"><i data-lucide="user"></i>Profil</a>
+  </nav>
+</div>
+<script>lucide.createIcons();</script>
+</body>
+</html>

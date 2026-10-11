@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Peta Saya — Peta Belajar</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="shared.css">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+</head>
+<body>
+<div class="app-frame">
+  <header class="topbar">
+    <div class="brand"><span class="logo"><i data-lucide="map"></i></span> Peta Belajar</div>
+    <nav class="topnav">
+      <a href="home.html">Beranda</a>
+      <a href="roadmap.html" class="active">Peta</a>
+      <a href="tanya.html">Tanya AI</a>
+      <a href="profile.html"><span class="avatar">RA</span></a>
+    </nav>
+  </header>
+
+  <main class="container">
+    <h1 class="page">Peta belajarmu</h1>
+    <p class="subtitle">Semua peta kompetensi yang pernah kamu buat. Kamu bisa mengeditnya kapan saja.</p>
+
+    <a class="btn" href="tanya.html" style="margin-bottom:20px"><i data-lucide="plus"></i> Buat peta baru</a>
+
+    <div class="row">
+      <div class="icon"><i data-lucide="divide"></i></div>
+      <div class="grow">
+        <div class="title">Pecahan Kelas 4 <span class="status next" style="margin-left:6px"><i data-lucide="flag"></i> Sedang berjalan</span></div>
+        <div class="meta">7 kompetensi · 3 dikuasai · dibuat 2 minggu lalu</div>
+        <div class="progress" style="margin-top:8px;max-width:280px"><div style="width:42%"></div></div>
+      </div>
+      <a class="btn sm" href="roadmap-detail.html">Lanjutkan</a>
+    </div>
+    <div class="row">
+      <div class="icon"><i data-lucide="hash"></i></div>
+      <div class="grow">
+        <div class="title">Perkalian &amp; Pembagian</div>
+        <div class="meta">6 kompetensi · selesai semua · dibuat 2 bulan lalu</div>
+      </div>
+      <span class="status master"><i data-lucide="check"></i> Tuntas</span>
+    </div>
+    <div class="row">
+      <div class="icon"><i data-lucide="ruler"></i></div>
+      <div class="grow">
+        <div class="title">Bangun Datar</div>
+        <div class="meta">5 kompetensi · belum mulai · dibuat 3 hari lalu</div>
+      </div>
+      <a class="btn sm secondary" href="roadmap-detail.html">Mulai</a>
+    </div>
+  </main>
+
+  <nav class="bottomnav">
+    <a href="home.html"><i data-lucide="home"></i>Beranda</a>
+    <a href="roadmap.html" class="active"><i data-lucide="map"></i>Peta</a>
+    <a href="tanya.html"><i data-lucide="message-circle-question"></i>Tanya</a>
+    <a href="profile.html"><i data-lucide="user"></i>Profil</a>
+  </nav>
+</div>
+<script>lucide.createIcons();</script>
+</body>
+</html>

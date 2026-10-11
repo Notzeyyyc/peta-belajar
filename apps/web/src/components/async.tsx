@@ -51,7 +51,7 @@ export function Skeleton({ className = "" }: { className?: string }) {
   return (
     <div
       aria-hidden
-      className={`motion-safe:animate-pulse rounded-tile bg-ink/10 ${className}`}
+      className={`skeleton-shimmer rounded-tile bg-ink/10 ${className}`}
     />
   );
 }

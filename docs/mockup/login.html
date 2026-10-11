@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Masuk — Peta Belajar</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="shared.css">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+</head>
+<body>
+<div class="app-frame">
+  <div class="auth-wrap">
+    <div class="card auth-card">
+      <div class="logo-lg"><i data-lucide="map"></i></div>
+      <h2 style="text-align:center;font-size:28px;font-weight:400;letter-spacing:-1px">Selamat datang kembali!</h2>
+      <p class="muted" style="text-align:center;margin:6px 0 24px">Masuk untuk melanjutkan perjalanan belajarmu.</p>
+      <form action="home.html">
+        <div class="field">
+          <label for="email">Email</label>
+          <input id="email" type="email" placeholder="kamu@email.com" required>
+        </div>
+        <button class="btn block" type="submit">Kirim tautan masuk <i data-lucide="mail"></i></button>
+      </form>
+      <p class="muted" style="text-align:center;margin-top:16px">Kami kirim tautan ajaib ke emailmu — tanpa kata sandi.</p>
+      <p class="muted" style="text-align:center;margin-top:20px">Baru di sini? <a href="home.html"><b>Coba demo dulu</b></a></p>
+    </div>
+  </div>
+</div>
+<script>lucide.createIcons();</script>
+</body>
+</html>

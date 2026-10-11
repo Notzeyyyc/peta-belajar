@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Beranda — Peta Belajar</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="shared.css">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+</head>
+<body>
+<div class="app-frame">
+  <header class="topbar">
+    <div class="brand"><span class="logo"><i data-lucide="map"></i></span> Peta Belajar</div>
+    <nav class="topnav">
+      <a href="home.html" class="active">Beranda</a>
+      <a href="roadmap.html">Peta</a>
+      <a href="tanya.html">Tanya AI</a>
+      <a href="profile.html"><span class="avatar">RA</span></a>
+    </nav>
+  </header>
+
+  <main class="container">
+    <h1 class="page">Halo, <b>Raka</b>!</h1>
+    <p class="subtitle">Ini kelanjutan perjalanan belajarmu.</p>
+
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px">
+        <h3 style="display:flex;align-items:center;gap:8px"><i data-lucide="target" style="width:16px;height:16px"></i> Peta aktif: Pecahan Kelas 4</h3>
+        <a href="roadmap-detail.html" class="btn sm secondary">Lihat detail</a>
+      </div>
+      <div class="progress" style="margin-bottom:8px"><div style="width:42%"></div></div>
+      <p class="muted">3 dari 7 kompetensi dikuasai</p>
+    </div>
+
+    <h2 class="section">Petamu saat ini</h2>
+    <div class="roadmap-track">
+      <div class="node done">
+        <span class="dot"><i data-lucide="check"></i></span>
+        <div class="body"><div class="card" style="padding:14px 18px">
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+            <b style="flex:1">Arti pecahan sederhana</b>
+            <span class="status master"><i data-lucide="check"></i> Kuasai</span>
+          </div>
+          <p class="muted" style="margin-top:4px">4 materi selesai</p>
+        </div></div>
+      </div>
+      <div class="node done">
+        <span class="dot"><i data-lucide="check"></i></span>
+        <div class="body"><div class="card" style="padding:14px 18px">
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+            <b style="flex:1">Pecahan senilai</b>
+            <span class="status master"><i data-lucide="check"></i> Kuasai</span>
+          </div>
+          <p class="muted" style="margin-top:4px">3 materi selesai</p>
+        </div></div>
+      </div>
+      <div class="node half">
+        <span class="dot"><i data-lucide="minus"></i></span>
+        <div class="body"><div class="card" style="padding:14px 18px">
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+            <b style="flex:1">Membandingkan pecahan</b>
+            <span class="status half"><i data-lucide="minus"></i> Setengah</span>
+          </div>
+          <p class="muted" style="margin-top:4px">2 dari 5 materi selesai</p>
+          <div class="progress" style="margin:8px 0 12px"><div style="width:40%"></div></div>
+          <a class="btn sm" href="materi-detail.html">Lanjutkan: pecahan dengan garis bilangan <i data-lucide="arrow-right"></i></a>
+        </div></div>
+      </div>
+      <div class="node gap">
+        <span class="dot"><i data-lucide="flag"></i></span>
+        <div class="body"><div class="card" style="padding:14px 18px">
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+            <b style="flex:1">Menjumlahkan pecahan</b>
+            <span class="status gap"><i data-lucide="flag"></i> Gap</span>
+          </div>
+          <p class="muted" style="margin-top:4px">Celah berikutnya yang perlu kamu latih — terbuka setelah "Membandingkan pecahan" tuntas.</p>
+        </div></div>
+      </div>
+      <div class="node" style="margin-bottom:0">
+        <span class="dot"><i data-lucide="lock"></i></span>
+        <div class="body"><div class="card" style="padding:14px 18px">
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+            <b style="flex:1;color:var(--ink-2)">Pecahan campuran</b>
+            <span class="status"><i data-lucide="lock"></i> Terkunci</span>
+          </div>
+          <p class="muted" style="margin-top:4px">Selesaikan langkah sebelumnya dulu ya.</p>
+        </div></div>
+      </div>
+    </div>
+
+    <h2 class="section">Langkah berikutnya</h2>
+    <div class="row">
+      <div class="icon"><i data-lucide="message-circle-question"></i></div>
+      <div class="grow"><div class="title">Ada yang bikin bingung?</div><div class="meta">Tanya AI — dia membimbing, bukan memberi jawaban</div></div>
+      <a class="btn sm secondary" href="tanya.html">Tanya</a>
+    </div>
+    <div class="row">
+      <div class="icon"><i data-lucide="map"></i></div>
+      <div class="grow"><div class="title">Lihat semua petamu</div><div class="meta">Pecahan, Perkalian, dan peta lain yang kamu simpan</div></div>
+      <a class="btn sm secondary" href="roadmap.html">Buka peta</a>
+    </div>
+  </main>
+
+  <nav class="bottomnav">
+    <a href="home.html" class="active"><i data-lucide="home"></i>Beranda</a>
+    <a href="roadmap.html"><i data-lucide="map"></i>Peta</a>
+    <a href="tanya.html"><i data-lucide="message-circle-question"></i>Tanya</a>
+    <a href="profile.html"><i data-lucide="user"></i>Profil</a>
+  </nav>
+</div>
+<script>lucide.createIcons();</script>
+</body>
+</html>

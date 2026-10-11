@@ -1,5 +1,5 @@
-import { RoadmapLoader } from "./client";
+import { RoadmapList } from "./client";
 
 export default function RoadmapPage() {
-  return <RoadmapLoader />;
+  return <RoadmapList />;
 }

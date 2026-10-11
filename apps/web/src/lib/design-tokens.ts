@@ -20,6 +20,7 @@ export const colors = {
 
 export const radius = {
   frame: "40px",
+  "frame-sm": "28px",
   card: "24px",
   tile: "18px",
   control: "14px",
