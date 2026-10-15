@@ -23,8 +23,10 @@ import {
   type AuthedRequest,
 } from "./auth/session.js";
 import { aiModel, clarifyGoal, generateMateriAnak, generateRoadmap, hashInput } from "./ai/client.js";
+import { consumeMagicToken, createMagicToken, MAGIC_LINK_TTL_MS, normalizeEmail, sendMagicLink } from "./auth/magic-link.js";
 
 const DEMO_USER_ID = "user_demo_juri";
+const MAGIC_LINK_RESPONSE = { ok: true, message: "Jika email terdaftar, tautan masuk telah dikirim." };
 
 /** Baca gaya belajar user (default visual bila belum pernah diset). */
 function currentLearningStyle(userId: string): LearningStyle {
@@ -51,6 +53,15 @@ export function createApp() {
   app.use(pinoHttp({ logger }));
   app.use(sessionMiddleware);
 
+  const magicLinkLimiter = rateLimit({
+    windowMs: 15 * 60_000,
+    limit: 5,
+    standardHeaders: "draft-7",
+    legacyHeaders: false,
+    keyGenerator: (req) => ipKeyGenerator(req.ip ?? ""),
+    handler: (_req, res) => res.json(MAGIC_LINK_RESPONSE),
+  });
+
   /* ------------------------------- Health ------------------------------- */
   app.get("/health", (_req, res) => {
     res.json({ ok: true, service: "peta-belajar-api", time: new Date().toISOString() });
@@ -67,15 +78,51 @@ export function createApp() {
     res.json({ user: { id: user.id, displayName: user.displayName, role: user.role } });
   });
 
-  // Stub aman: selalu balas generik agar tidak bocorkan email terdaftar/tidak.
-  app.post("/api/auth/magic-link/request", (req, res) => {
-    const email = typeof req.body?.email === "string" ? req.body.email.trim() : "";
-    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
+  app.post("/api/auth/magic-link/request", magicLinkLimiter, async (req, res) => {
+    const rawEmail = typeof req.body?.email === "string" ? req.body.email : "";
+    const email = normalizeEmail(rawEmail);
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email) || email.length > 254) {
       sendError(res, 400, ERR.INVALID_REQUEST, "Format email tidak valid.");
       return;
     }
-    logger.info({ emailDomain: email.split("@")[1] }, "magic-link request (stub)");
-    res.json({ ok: true, message: "Jika email terdaftar, tautan masuk telah dikirim." });
+    try {
+      const { token, tokenHash } = createMagicToken();
+      const now = new Date();
+      const id = crypto.randomUUID();
+      db.insert(schema.magicLinkTokens)
+        .values({ id, email, tokenHash, expiresAt: new Date(now.getTime() + MAGIC_LINK_TTL_MS), usedAt: null, createdAt: now })
+        .run();
+      await sendMagicLink(email, token);
+    } catch (err) {
+      logger.error({ err }, "magic-link request failed");
+    }
+    res.json(MAGIC_LINK_RESPONSE);
+  });
+
+  app.get("/api/auth/magic-link/verify", (req, res) => {
+    const token = typeof req.query.token === "string" ? req.query.token : "";
+    if (!/^[A-Za-z0-9_-]{43}$/.test(token)) {
+      sendError(res, 400, ERR.INVALID_REQUEST, "Tautan masuk tidak valid atau kedaluwarsa.");
+      return;
+    }
+    const email = consumeMagicToken(token);
+    if (!email) {
+      sendError(res, 400, ERR.INVALID_REQUEST, "Tautan masuk tidak valid atau kedaluwarsa.");
+      return;
+    }
+    const now = new Date();
+    let user = db.select().from(schema.users).where(eq(schema.users.email, email)).get();
+    if (!user) {
+      const userId = `user_${crypto.randomUUID()}`;
+      db.insert(schema.users).values({ id: userId, displayName: email.split("@")[0].slice(0, 80) || "Siswa", email, role: "student", createdAt: now }).run();
+      user = db.select().from(schema.users).where(eq(schema.users.id, userId)).get();
+    }
+    if (!user) {
+      sendError(res, 500, ERR.INTERNAL, "Tidak dapat membuat sesi.");
+      return;
+    }
+    setSessionCookie(res, createSession(user.id));
+    res.redirect(302, "/home?verified=1");
   });
 
   app.get("/api/me", requireAuth, (req: AuthedRequest, res) => {
@@ -271,7 +318,22 @@ export function createApp() {
         .all()
         .map((l) => l.resource);
       if (linked.length === 0) {
-        sendError(res, 404, ERR.NOT_FOUND, "Langkah ini belum punya materi sumber.");
+        // Fallback ramah: katalog polos, tanpa AI, tanpa cache.
+        const anyResource = db
+          .select()
+          .from(schema.resources)
+          .orderBy(asc(schema.resources.id))
+          .all()[0];
+        if (!anyResource) {
+          sendError(res, 404, ERR.NOT_FOUND, "Katalog materi masih kosong.");
+          return;
+        }
+        res.json({
+          mode: "fallback",
+          reason: "Materi khusus untuk langkah ini sedang disiapkan. Sementara, coba materi umum ini dulu ya.",
+          resource: plainSumber(anyResource),
+          learningStyle: currentLearningStyle(userId),
+        });
         return;
       }
       const source = linked.find((r) => r.content && r.content.trim().length > 0);

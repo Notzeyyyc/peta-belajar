@@ -8,6 +8,9 @@ import {
   MessageCircleQuestion,
   Target,
 } from "lucide-react";
+import { Suspense } from "react";
+import { useSearchParams } from "next/navigation";
+import { CheckCircle2 } from "lucide-react";
 import { AppShell, AppNav } from "@/components/app-shell";
 import { useApiData, SkeletonBlock, ErrorState, EmptyState } from "@/components/async";
 import { ProgressBar, NodeStatusPill, NODE_STATUS_META } from "@/components/status";
@@ -15,6 +18,16 @@ import { api, type RoadmapSummary, type RoadmapDetail } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
 export default function HomePage() {
+  return (
+    <Suspense>
+      <HomeInner />
+    </Suspense>
+  );
+}
+
+function HomeInner() {
+  const searchParams = useSearchParams();
+  const verified = searchParams.get("verified") === "1";
   const { state, retry } = useApiData(() => api.home());
   const roadmapId = state.kind === "ready" ? state.data.activeRoadmap?.id : undefined;
   const { state: detailState } = useApiData(
@@ -26,6 +39,17 @@ export default function HomePage() {
     <AppShell>
       <AppNav />
       <main className="mx-auto max-w-3xl px-5 pb-36 pt-8 md:px-[42px] md:pb-8 md:pt-12">
+        {verified && state.kind === "ready" && (
+          <div
+            role="status"
+            className="mb-6 flex items-center gap-3 rounded-card border border-line bg-card p-4"
+          >
+            <CheckCircle2 className="h-5 w-5 shrink-0 text-ink" aria-hidden />
+            <p className="text-sm font-bold text-ink">
+              Email berhasil diverifikasi — kamu sudah masuk!
+            </p>
+          </div>
+        )}
         {state.kind === "loading" && (
           <div className="space-y-6">
             <SkeletonBlock lines={2} />

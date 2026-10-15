@@ -15,6 +15,13 @@
       "when": 1791558558577,
       "tag": "0001_woozy_magdalene",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1792023974784,
+      "tag": "0002_magic_link_tokens",
+      "breakpoints": true
     }
   ]
 }

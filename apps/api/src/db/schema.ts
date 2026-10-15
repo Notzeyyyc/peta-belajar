@@ -15,6 +15,14 @@ export const sessions = sqliteTable("sessions", {
   createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
 });
 
+export const magicLinkTokens = sqliteTable("magic_link_tokens", {
+  id: text("id").primaryKey(),
+  email: text("email").notNull(),
+  tokenHash: text("token_hash").notNull().unique(),
+  expiresAt: integer("expires_at", { mode: "timestamp_ms" }).notNull(),
+  usedAt: integer("used_at", { mode: "timestamp_ms" }),
+  createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
+});
 export const learningPreferences = sqliteTable("learning_preferences", {
   userId: text("user_id").primaryKey().references(() => users.id),
   style: text("style", { enum: ["visual", "praktik", "teori"] }).notNull().default("visual"),

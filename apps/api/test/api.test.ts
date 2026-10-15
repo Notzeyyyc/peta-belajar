@@ -73,11 +73,46 @@ describe("Auth", () => {
     expect(typeof res.body.error.message).toBe("string");
   });
 
-  it("magic-link request = stub aman (respons generik)", async () => {
-    const res = await request(app).post("/api/auth/magic-link/request").send({ email: "x@y.id" });
-    expect(res.status).toBe(200);
-    expect(res.body.ok).toBe(true);
+  it("magic-link request issues hashed token and verification consumes it once", async () => {
+    const originalFetch = globalThis.fetch;
+    let sent: { body: string } | undefined;
+    globalThis.fetch = (async (_input: RequestInfo | URL, init?: RequestInit) => {
+      sent = { body: String(init?.body ?? "") };
+      return new Response(JSON.stringify({ id: "email-id" }), { status: 200 });
+    }) as typeof fetch;
+    process.env.RESEND_API_KEY = "test-resend-key";
+    process.env.MAGIC_LINK_BASE_URL = "https://learn.example";
+    try {
+      const requested = await request(app).post("/api/auth/magic-link/request").send({ email: "  learner@example.com " });
+      expect(requested.status).toBe(200);
+      expect(requested.body.message).toContain("Jika email terdaftar");
+      expect(sent?.body).toContain("noreply@send.qenoxit.site");
+      const payload = JSON.parse(sent!.body);
+      const link = new URL(payload.html.match(/href="([^"]+)/)![1]);
+      const token = link.searchParams.get("token")!;
+      const stored = db.select().from(schema.magicLinkTokens).all();
+      const row = stored.find((entry) => entry.email === "learner@example.com")!;
+      expect(row.tokenHash).not.toBe(token);
+      expect(row.tokenHash).toMatch(/^[a-f0-9]{64}$/);
+      expect(row.expiresAt.getTime() - row.createdAt.getTime()).toBe(15 * 60 * 1000);
+
+      const agent = request.agent(app);
+      const verified = await agent.get(`/api/auth/magic-link/verify?token=${encodeURIComponent(token)}`);
+      expect(verified.status).toBe(302);
+      expect(verified.headers.location).toBe("/home?verified=1");
+      expect(verified.headers["set-cookie"]?.toString()).toContain("HttpOnly");
+      expect((await agent.get("/api/me")).status).toBe(200);
+      expect((await request(app).get(`/api/auth/magic-link/verify?token=${encodeURIComponent(token)}`)).status).toBe(400);
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
   });
+
+  it("invalid magic-link token is rejected", async () => {
+    const res = await request(app).get("/api/auth/magic-link/verify?token=invalid");
+    expect(res.status).toBe(400);
+  });
+
 });
 
 describe("Clarify & Generate (AI_MOCK)", () => {

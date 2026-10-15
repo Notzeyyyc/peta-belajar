@@ -123,7 +123,9 @@ async function chatJson(system: string, user: string): Promise<string> {
   }
   const content = res.choices[0]?.message?.content;
   if (!content) throw new AppError(502, ERR.AI_PROVIDER_ERROR, "Layanan AI memberi respons kosong.");
-  return content;
+  // 9Router dapat menambahkan sentinel SSE setelah body JSON pada respons non-stream.
+  // Hapus hanya sentinel trailing tersebut; jangan mengubah isi JSON dari model.
+  return content.replace(/data:\s*\[DONE\]\s*$/i, "").trim();
 }
 
 function parseJson(raw: string): unknown {
@@ -159,7 +161,7 @@ export async function generateRoadmap(
     "Kamu asisten peta belajar untuk siswa SD di Indonesia. Balas HANYA JSON valid dengan bentuk " +
       '{"title":"...","summary":"...","competencies":[{"name":"...","description":"...","status":"gap|half|master",' +
       '"reason":"...","nextAction":"...","resourceIds":["..."]}]}. ' +
-      "Buat 3-6 kompetensi berurutan. resourceIds HANYA boleh diambil dari daftar ID katalog berikut — " +
+      "Buat tepat 3-5 kompetensi berurutan. Setiap string WAJIB singkat: title maksimal 80 karakter, summary maksimal 300 karakter, name maksimal 80, description maksimal 300, reason maksimal 300, nextAction maksimal 200. resourceIds HANYA boleh diambil dari daftar ID katalog berikut — " +
       "dilarang keras membuat ID atau URL baru: " +
       catalogIds.join(", "),
     `Tujuan: ${req.goal}\nJawaban klarifikasi: ${JSON.stringify(req.answers)}`,
